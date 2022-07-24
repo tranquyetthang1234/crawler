@@ -1,0 +1,22 @@
+{
+  "name": "crawler",
+  "version": "1.0.0",
+  "description": "test",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "s"
+  ],
+  "author": "thang",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "cors": "^2.8.5",
+    "dotenv": "^9.0.0",
+    "express": "^4.17.1",
+    "puppeteer": "^15.4.0"
+  }
+}
