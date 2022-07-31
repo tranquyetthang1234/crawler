@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors')
-const request = require('request')
+//const request = require('request')
 
 const crawlerMercari = require('./crawler/mercaries.js');
 const crawlerPaypay = require('./crawler/paypay.js');
@@ -137,7 +137,7 @@ async function main(params) {
 	process.setMaxListeners(0);
 	const browser = await puppeteer.launch({
 		ignoreHTTPSErrors: false,
-		headless: false,
+		headless: true,
 		args: [
 			"--disable-gpu",
 			"--disable-dev-shm-usage",
@@ -198,7 +198,7 @@ app.get('/search', async (req, res) => {
 		if (!inArray) {
 			throw new Error('Url invalid');
 		}
-		
+
 		response = await main(search);
 	} catch (error) {
 		console.dir('Error: ' + error);
