@@ -1,40 +1,27 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 const FOLDER_IMAGE = './public/uploads/amazonjp/';
+const SAVE_IMAGE_TO_FOLDER = false;
+
 function delay(time) {
     return new Promise(function(resolve) { 
         setTimeout(resolve, time)
     });
- }
-async function crawlerAmazon(url) {
+}
 
-    const browser = await puppeteer.launch({
-        ignoreHTTPSErrors: false,
-        headless: true,
-        args: [
-            "--disable-gpu",
-            "--disable-dev-shm-usage",
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--no-zygote",
-            // "--single-process",
-            "--disable-site-isolation-trials",
-            "--disable-features=site-per-process",
-        ],
-        browserContext: "default",
-    });
+async function crawlerAmazon(url, browser, page) {
 
     try {
-		const page = await browser.newPage();
+		let productInfo = {}
 		page.waitForNavigation({
 			waitUntil: "domcontentloaded"
 		});
 
 		await page.goto(url, {
 			waitUntil: "networkidle2",
-			timeout: 3000000
+            timeout: 0
 		})
-		await page.waitForTimeout(1000);
+		await page.waitForTimeout(500);
         await page.waitForSelector('body');
 		await page.$x('/html/body');
        
@@ -89,7 +76,8 @@ async function crawlerAmazon(url) {
         })
 
         /* Get product features */
-        let features = await page.evaluate(() => {
+        let features = '';
+            features = await page.evaluate(() => {
            
             let features = document.querySelectorAll('#feature-bullets ul li');
             let formattedFeatures = [];
@@ -104,7 +92,7 @@ async function crawlerAmazon(url) {
         let description = '';
         description = await page.evaluate(() => {
             let bookDescription = document.querySelector('#bookDescription_feature_div div');
-            return bookDescription != null ? features.innerText : '';
+            return bookDescription != null ? bookDescription.innerText : '';
         })
 
         // let images = await page.evaluate(() => {
@@ -181,24 +169,34 @@ async function crawlerAmazon(url) {
         listImages = listImages.map((image) => {
             return changeUrlImage(image)
         })
-        
+
+        if (name.length == 0) {
+			throw new Error('Can not get data');
+		}
          
-        let productInfo = {
+        productInfo = {
 			'name': name,
             'features': features,
 			'description': description,
 			'price': listPrice1,
-			'currency': '¥',
+			'currency': listPrice1 ? '¥' : '',
 			'images': listImages,
 			'is_stock' : checkStock ? false : true,
-            'page' : 'amazon'
+            'page' : 'amazon',
+            'url': url
 		}
         console.log('Product name :'+ productInfo.name)
-        await browser.close();
 
         return productInfo;
     } catch (error) {
         console.log("Error : " + error);
+        return {
+            'name': '',
+            'url': url,
+            'page' : 'amazon',
+            'error': error.message,
+            'message' : MSG_ERROR
+        };
     }
 }
 

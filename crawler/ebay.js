@@ -3,34 +3,36 @@ const fs = require('fs');
 const FOLDER_IMAGE = './public/uploads/ebay/';
 const SAVE_IMAGE_TO_FOLDER = false;
 
-async function crawlerEbay(url) {
+async function crawlerEbay(url, browser, page) {
 
-    const browser = await puppeteer.launch({
-        ignoreHTTPSErrors: false,
-        headless: true,
-        args: [
-            "--disable-gpu",
-            "--disable-dev-shm-usage",
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--no-zygote",
-            "--single-process",
-			"--disable-site-isolation-trials",
-            "--disable-features=site-per-process",
-        ],
-    });
+    // const browser = await puppeteer.launch({
+    //     ignoreHTTPSErrors: false,
+    //     headless: false,
+    //     args: [
+    //         "--disable-gpu",
+    //         "--disable-dev-shm-usage",
+    //         "--no-sandbox",
+    //         "--disable-setuid-sandbox",
+    //         "--no-zygote",
+    //         "--single-process",
+	// 		"--disable-site-isolation-trials",
+    //         "--disable-features=site-per-process",
+    //     ],
+    // });
 
-    const page = await browser.newPage();
+    // const page = await browser.newPage();
     try {
 		page.waitForNavigation({
 			waitUntil: "domcontentloaded"
 		});
 
-		await page.goto(url, {
-			waitUntil: "networkidle2"
+		let res = await page.goto(url, {
+			waitUntil: "networkidle2",
+            timeout: 0
 		})
-
-		await page.waitForTimeout(1000);
+		
+        // page.setDefaultNavigationTimeout(0)
+		await page.waitForTimeout(500);
 		await page.$x('/html/body');
 
         let [nameXPath] = await page.$x('/html/body/div[5]/div[3]/div/div/div[4]/div[3]/div[1]/div[1]/div/h1');
@@ -65,6 +67,9 @@ async function crawlerEbay(url) {
 			}
 		}));
 
+		if (name.length == 0) {
+			throw new Error('Can not get data');
+		}
         let uniqueImages = [...new Set(images)]
         let productInfo = {
 			'name': name,
@@ -99,6 +104,13 @@ async function crawlerEbay(url) {
         return productInfo;
     } catch (error) {
         console.log("Error : " + error);
+		return {
+			'name': '',
+            'url': url,
+            'error': error.message,
+            'page' : 'ebay',
+			'message' : MSG_ERROR
+		};
     }
 }
 

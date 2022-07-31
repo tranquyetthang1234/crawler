@@ -1,36 +1,18 @@
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const FOLDER_IMAGE = './public/uploads/paypay/';
-const SAVE_IMAGE_TO_FOLDER = false;
+const MSG_ERROR = '商品情報が取得出来ませんでした。仕入先URLを再度確認してください。';
 
-async function crawlerPaypay(url) {
-
-    const browser = await puppeteer.launch({
-        ignoreHTTPSErrors: false,
-        headless: true,
-        args: [
-            "--disable-gpu",
-            "--disable-dev-shm-usage",
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--no-zygote",
-            "--single-process",
-			"--disable-site-isolation-trials",
-            "--disable-features=site-per-process",
-        ],
-    });
+async function crawlerPaypay(url, browser, page) {
+    
     try {
-		const page = await browser.newPage();
 		page.waitForNavigation({
 			waitUntil: "domcontentloaded"
 		});
 
 		await page.goto(url, {
 			waitUntil: "networkidle2",
-			// timeout: 3000000
+			timeout: 0
 		})
-
-		await page.waitForTimeout(3000);
+		
+		await page.waitForTimeout(500);
 		await page.$x('/html/body');
 
         let [priceXPath] = await page.$x('/html/body/div[1]/div/main/div[1]/div[2]/aside/div[1]/div[1]/div[3]/div/div[1]');
@@ -62,9 +44,13 @@ async function crawlerPaypay(url) {
 		}));
 
         let images = await page.$$eval(".slick-slider .slick-list div img", imgs => imgs.map(function (img) {
-			let src = img.getAttribute('src');
-			return src;
+			return img.getAttribute('src');
 		}));
+
+
+		if (name.length == 0) {
+			throw new Error('Can not get data');
+		}
 		
         let uniqueImages = [...new Set(images)]
 
@@ -72,35 +58,27 @@ async function crawlerPaypay(url) {
 			'name': name,
 			'description': desc,
 			'price': price.replace(/[^\d]/g, ""),
-			'currency': '円',
+			'currency': name ? '円': '',
 			'images': uniqueImages,
-			'is_stock' : checkStock ? false : true
+			'is_stock' : checkStock ? false : true,
+			'url' : url,
+			'page' : 'paypay'
 		}
         console.log('Product name :'+ productInfo.name)
-
-		if (SAVE_IMAGE_TO_FOLDER) {
-			let dir = FOLDER_IMAGE;
-			if (!fs.existsSync(dir)) {
-				fs.mkdirSync(dir, {
-					recursive: true
-				});
-			}
-			for (srcImage of productInfo.images) {
-				const pageGoto = await page.goto(srcImage);
-				let imageName = dir + srcImage.replace(/^.*[\\\/]/, '');
-				fs.writeFile(imageName, await pageGoto.buffer(), function (err) {
-					if (err) {
-						return console.log(err);
-					}
-				});
-			}
-		}
 
         await browser.close();
 
         return productInfo;
     } catch (error) {
-        console.log("Error : " + error);
+        await browser.close();
+        console.log("Error: " + error);
+		return {
+			'name': '',
+			'url': url,
+			'page' : 'paypay',
+			'error': error.message,
+			'message' : MSG_ERROR
+		}
     }
 }
 

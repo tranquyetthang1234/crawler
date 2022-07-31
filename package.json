@@ -1,15 +1,15 @@
 {
-  "name": "crawler",
+  "name": "maruweb",
   "version": "1.0.0",
-  "description": "test",
+  "description": "crawler",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
-    "s"
+    "node crawler"
   ],
-  "author": "thang",
+  "author": "maruweb",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.27.2",
