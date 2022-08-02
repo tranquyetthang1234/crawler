@@ -22,7 +22,7 @@ async function crawlerPaypay(url, browser, page) {
 
         let [nameXPath] = await page.$x('/html/body/div[1]/div/main/div[1]/div[2]/aside/div[1]/div[1]/div[1]/div[1]/h1');
         let name = await page.evaluate(function (el) {
-			return el ? el.innerHTML : '';
+			return el ? el.textContent : '';
 		}, nameXPath);
         
         let desc = '';
@@ -51,7 +51,7 @@ async function crawlerPaypay(url, browser, page) {
 		if (name.length == 0) {
 			throw new Error('Can not get data');
 		}
-		
+
         let uniqueImages = [...new Set(images)]
 
         let productInfo = {

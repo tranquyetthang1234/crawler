@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const FOLDER_IMAGE = './public/uploads/amazonjp/';
 const SAVE_IMAGE_TO_FOLDER = false;
+const MSG_ERROR = '商品情報が取得出来ませんでした。仕入先URLを再度確認してください。';
 
 function delay(time) {
     return new Promise(function(resolve) { 
@@ -74,7 +75,7 @@ async function crawlerAmazon(url, browser, page) {
             let tagname = document.querySelector('#productTitle');
             return tagname ? tagname.innerText : null;
         })
-
+       
         /* Get product features */
         let features = '';
             features = await page.evaluate(() => {
@@ -144,7 +145,7 @@ async function crawlerAmazon(url, browser, page) {
             })
         })
 
-        if(listPrice1.length == 0) {
+        if(listPrice1 && listPrice1.length == 0) {
             listPrice1 = await page.evaluate(() => {
                 let ul = document.querySelectorAll('.a-unordered-list.a-nostyle.a-button-list.a-horizontal .swatchElement');
                 listPrices = Array.from(ul)
@@ -157,7 +158,7 @@ async function crawlerAmazon(url, browser, page) {
                         isSelected = true;
                     }
                     return {
-                        title : title,
+                        title : title + 'xxxx',
                         url : null,
                         price : priceItem.replace(/[^\d]/g, ""),
                         currency: priceItem ? '¥' : '',
@@ -170,7 +171,7 @@ async function crawlerAmazon(url, browser, page) {
             return changeUrlImage(image)
         })
 
-        if (name.length == 0) {
+        if (name && name.length == 0) {
 			throw new Error('Can not get data');
 		}
          
@@ -187,9 +188,12 @@ async function crawlerAmazon(url, browser, page) {
 		}
         console.log('Product name :'+ productInfo.name)
 
+		await browser.close();
         return productInfo;
+
     } catch (error) {
         console.log("Error : " + error);
+        await browser.close();
         return {
             'name': '',
             'url': url,
@@ -197,6 +201,7 @@ async function crawlerAmazon(url, browser, page) {
             'error': error.message,
             'message' : MSG_ERROR
         };
+		
     }
 }
 

@@ -102,16 +102,6 @@ async function test() {
 	console.log(products.length);
 	await browser.close();
 	return products;
-	// ===================================
-	// console.log("========== Start crawler page ebay! ==========");
-	// let eBays = [
-	// 	'https://www.ebay.com/itm/402926975907',
-	// 	// 'https://www.ebay.com/itm/283562949261'
-	// ];
-
-	// const productEbay = await Promise.all(eBays.map(ebay => crawlerEbay(ebay)));
-	// console.log(productEbay.length);
-	// console.dir(productEbay, { depth: null });
 }
 
 // test();
@@ -119,21 +109,37 @@ async function test() {
 async function run() {
 	const browser = await puppeteer.launch({
 		headless: false,
-		//   args: [ '--proxy-server=23.254.122.227:8800' ]
+		// ignoreHTTPSErrors: true,
+		args: [ 
+			// '--proxy-server=88.214.56.203:3128',
+			// "--proxy-server=" + "http://127.0.0.1:2991",
+			// '--no-sandbox'
+			// '--ignore-certificate-errors' 
+			//121.36.190.122:8080
+			// '--proxy-server=http=190.26.201.194:8080',
+			'--proxy-server=http=8.219.97.248:80',
+			'--ignore-certificate-errors',
+			'--ignore-certificate-errors-spki-list '
+		]
 	});
-	const page = await browser.newPage();
+	
+	const context = await browser.createIncognitoBrowserContext();
+	const page = await context.newPage();
 	const proxy = "http://api.scraperapi.com?api_key=c0752f9b2f826bbbac400e4469001d7d&url=";
-	const url = 'https://www.amazon.co.jp/-/en/%E3%83%99%E3%82%B9%E3%83%88%E3%82%AB%E3%83%BC%E7%B7%A8%E9%9B%86%E9%83%A8-ebook/dp/B09XDS3BNM/ref=tmm_kin_swatch_0?_encoding=UTF8&qid=&sr=';
-	const pageUrl = proxy + url;
-
-	await page.goto(pageUrl);
-	// const pageUrl = 'https://whatismyipaddress.com/';
-
+	const url = 'http://httpbin.org/ip';
+	let pageUrl = proxy + url;
+	// curl "http://api.scraperapi.com?api_key=c0752f9b2f826bbbac400e4469001d7d&url=http://httpbin.org/ip"
 	// await page.goto(pageUrl);
+	// const pageUrl = 'https://whatismycountry.com';
+
+	await page.goto(pageUrl, {
+		waitUntil: "networkidle2",
+		timeout: 0
+	});
 }
 
 //   run();
-async function main(params) {
+async function main(params, suppliername) {
 	process.setMaxListeners(0);
 	const browser = await puppeteer.launch({
 		ignoreHTTPSErrors: false,
@@ -147,6 +153,7 @@ async function main(params) {
 			"--single-process",
 			"--disable-site-isolation-trials",
 			"--disable-features=site-per-process",
+			// '--proxy-server=8.219.97.248:80'
 		],
 		browserContext: "default",
 	});
@@ -155,7 +162,7 @@ async function main(params) {
 	let product = [];
 	let url = params.supplierval || '';
 
-	switch (params.suppliername) {
+	switch (suppliername) {
 		case 'amazon':
 			console.log("========== Start crawler page amazon! ==========");
 			product = await crawlerAmazon(url, browser, page);
@@ -178,6 +185,7 @@ async function main(params) {
 }
 
 app.get('/', async (req, res) => {
+	console.log(req.socket.remoteAddress);
 	await res.send("Test server is running success!")
 })
 
@@ -185,21 +193,30 @@ app.get('/search', async (req, res) => {
 
 	let search = req.query;
 	let response = [];
-	let listPages = [
-		'ebay.com',
-		'amazon.co.jp',
-		'paypayfleamarket.yahoo.co.jp',
-		'jp.mercari.com'
-	];
+	let listPages = {
+		paypay : 'paypayfleamarket.yahoo.co.jp',
+		mercari : 'jp.mercari.com',
+		amazon : 'amazon.co.jp',
+		ebay : 'ebay.com'
+	}
+	console.log(search)
 	let url = search.supplierval || '';
-	let inArray = false;
+	let checkUrl = false;
+	let suppliername = 'ebay';
+	
 	try {
-		inArray = listPages.some(item => url.includes(item));
-		if (!inArray) {
-			throw new Error('Url invalid');
+		for (let k of Object.keys(listPages)) {
+			if (url.includes(listPages[k]) && !checkUrl) {
+				checkUrl = true;
+				suppliername = k;
+			}
 		}
-
-		response = await main(search);
+		
+		if (!checkUrl) {
+			throw new Error('Url invalid ' + url);
+		}
+	
+		response = await main(search, suppliername);
 	} catch (error) {
 		console.dir('Error: ' + error);
 
