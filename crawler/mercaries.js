@@ -50,7 +50,6 @@ async function crawlerMercari(url, browser, page) {
 		}
  		
 		await browser.close();
-		
 		return productInfo;
 	} catch (error) {
         console.log("Error: " + error);
