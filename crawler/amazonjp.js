@@ -13,6 +13,8 @@ async function crawlerAmazon(url, browser, page) {
             timeout: 0
         })
         await page.waitForTimeout(500);
+		await page.setDefaultNavigationTimeout(100000);
+
         await page.waitForSelector('body');
         await page.$x('/html/body');
 

@@ -19,16 +19,17 @@ app.use(cors())
 const MSG_ERROR = '商品情報が取得出来ませんでした。仕入先URLを再度確認してください。';
 
 async function run() {
-	let ip = getIpProxy();
+	// let proxyIP = getIpProxy();
+	let proxyIP = '140.227.59.167:3180';
 	const browser = await puppeteer.launch({
 		headless: false,
 		args: [ 
-			`--proxy-server=${ ip }`,
+			`--proxy-server=${ proxyIP }`,
 			'--ignore-certificate-errors',
 			'--ignore-certificate-errors-spki-list '
 		]
 	});
-	console.log('IP Proxy ' + ip)
+	console.log('IP Proxy ' + proxyIP)
 	
 	const context = await browser.createIncognitoBrowserContext();
 	const page = await context.newPage();
@@ -44,10 +45,10 @@ async function run() {
 // run();
 async function main(params, suppliername) {
 	process.setMaxListeners(0);
-	let proxyIP = getIpProxy();
+	let proxyIP = suppliername == 'paypay' ? '' : getIpProxy();
 	const browser = await puppeteer.launch({
 		ignoreHTTPSErrors: false,
-		headless: true,
+		headless: false,
 		args: [
 			"--disable-gpu",
 			"--disable-dev-shm-usage",
@@ -63,6 +64,7 @@ async function main(params, suppliername) {
 	});
 	console.log('IP Proxy ' + proxyIP)
 	const page = await browser.newPage();
+	// await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
 	let product = [];
 	let url = params.supplierval || '';
 

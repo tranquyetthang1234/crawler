@@ -8,13 +8,14 @@ async function crawlerPaypay(url, browser, page) {
 		});
 
 		await page.goto(url, {
-			waitUntil: "networkidle2",
+			waitUntil: "networkidle0",
 			timeout: 0
 		})
-		
-		await page.waitForTimeout(500);
-		await page.$x('/html/body');
 
+		await page.waitForTimeout(500);
+		await page.setDefaultNavigationTimeout(100000);
+		
+		await page.$x('/html/body');
         let [priceXPath] = await page.$x('/html/body/div[1]/div/main/div[1]/div[2]/aside/div[1]/div[1]/div[3]/div/div[1]');
         let price = await page.evaluate(function (el) {
 			return el ? el.textContent : '';

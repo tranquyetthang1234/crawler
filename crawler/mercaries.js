@@ -8,11 +8,12 @@ async function crawlerMercari(url, browser, page) {
 		});
 
 		await page.goto(url, {
-			waitUntil: "networkidle2",
+			waitUntil: "networkidle0",
 			timeout: 0
 		})
-		
 		await page.waitForTimeout(500);
+		await page.setDefaultNavigationTimeout(100000);
+
 		await page.$x('/html/body');
 		await page.$x('/html/body/div/div[1]/div/div/div/main/article/div[1]/section/div/div/div/div/div[2]/div/div/div/div/div[4]')
 		let [descriptionXPath] = await page.$x('/html/body/div/div[1]/div/div/div/main/article/div[2]/section[2]/mer-show-more');
@@ -34,9 +35,9 @@ async function crawlerMercari(url, browser, page) {
 			return name ? name.textContent : '';
 		}, descriptionXPath);
 		
-		if (name.length == 0) {
-			throw new Error('Can not get data');
-		}
+		// if (name.length == 0) {
+		// 	throw new Error('Can not get data');
+		// }
 		
 		let productInfo = {
 			'name': name.length && name.length > 0 ? name[0] : '',
