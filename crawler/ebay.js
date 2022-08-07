@@ -5,64 +5,67 @@ const SAVE_IMAGE_TO_FOLDER = false;
 
 async function crawlerEbay(url, browser, page) {
 
-    // const browser = await puppeteer.launch({
-    //     ignoreHTTPSErrors: false,
-    //     headless: false,
-    //     args: [
-    //         "--disable-gpu",
-    //         "--disable-dev-shm-usage",
-    //         "--no-sandbox",
-    //         "--disable-setuid-sandbox",
-    //         "--no-zygote",
-    //         "--single-process",
+	// const browser = await puppeteer.launch({
+	//     ignoreHTTPSErrors: false,
+	//     headless: false,
+	//     args: [
+	//         "--disable-gpu",
+	//         "--disable-dev-shm-usage",
+	//         "--no-sandbox",
+	//         "--disable-setuid-sandbox",
+	//         "--no-zygote",
+	//         "--single-process",
 	// 		"--disable-site-isolation-trials",
-    //         "--disable-features=site-per-process",
-    //     ],
-    // });
+	//         "--disable-features=site-per-process",
+	//     ],
+	// });
 
-    // const page = await browser.newPage();
-    try {
+	// const page = await browser.newPage();
+	try {
 		page.waitForNavigation({
 			waitUntil: "domcontentloaded"
 		});
 
 		let res = await page.goto(url, {
 			waitUntil: "networkidle2",
-            timeout: 0
+			timeout: 0
 		})
-		
-        // page.setDefaultNavigationTimeout(0)
+
+		// page.setDefaultNavigationTimeout(0)
 		await page.waitForTimeout(500);
 		await page.$x('/html/body');
 
-        let [nameXPath] = await page.$x('/html/body/div[5]/div[3]/div/div/div[4]/div[3]/div[1]/div[1]/div/h1');
-        let name = await page.evaluate(function (el) {
+		let [nameXPath] = await page.$x('/html/body/div[5]/div[3]/div/div/div[4]/div[3]/div[1]/div[1]/div/h1');
+		let name = await page.evaluate(function (el) {
 			return el ? el.textContent : '';
 		}, nameXPath);
 
-        let objectPrice = await page.evaluate(function (el) {
+		let objectPrice = await page.evaluate(function (el) {
 			let element = document.querySelector('.mainPrice .notranslate');
 			if (element != null) {
 				return {
-					price : element.getAttribute('content'),
-					currency:element.textContent.replace(element.getAttribute('content'), '')
+					price: element.getAttribute('content'),
+					currency: element.textContent.replace(element.getAttribute('content'), '')
 				}
-            }
-			return { price: null, currency : null };
+			}
+			return {
+				price: null,
+				currency: null
+			};
 		});
 
-        let content = '';
+		let content = '';
 		let [contentXPath] = await page.$x('//*[@id="desc_panel"]');
-        content = await page.evaluate(function (name) {
+		content = await page.evaluate(function (name) {
 			return name ? name.textContent : '';
 		}, contentXPath);
-        
+
 		let checkStock = false
 
-        let imagesXPath = '/html/body/div[5]/div[3]/div/div/div[3]/div[1]/div'
-        let images = await page.$$eval("#vertical-align-items-viewport img", imgs => imgs.map(function (img) {
+		let imagesXPath = '/html/body/div[5]/div[3]/div/div/div[3]/div[1]/div'
+		let images = await page.$$eval("#vertical-align-items-viewport img", imgs => imgs.map(function (img) {
 			let src = img.getAttribute('src').replace('s-l64', 's-l600');
-			if(src.includes('.gif') == false) {
+			if (src.includes('.gif') == false) {
 				return src;
 			}
 		}));
@@ -70,16 +73,16 @@ async function crawlerEbay(url, browser, page) {
 		if (name.length == 0) {
 			throw new Error('Can not get data');
 		}
-        let uniqueImages = [...new Set(images)]
-        let productInfo = {
+		let uniqueImages = [...new Set(images)]
+		let productInfo = {
 			'name': name,
 			'description': content,
 			'price': objectPrice.price,
 			'currency': objectPrice.currency,
 			'images': uniqueImages.filter(el => el != null),
-			'is_stock' : checkStock ? false : true,
+			'is_stock': checkStock ? false : true,
 		}
-        console.log('Product name :'+ productInfo.name)
+		console.log('Product name :' + productInfo.name)
 
 		if (SAVE_IMAGE_TO_FOLDER) {
 			let dir = FOLDER_IMAGE;
@@ -99,22 +102,19 @@ async function crawlerEbay(url, browser, page) {
 			}
 		}
 
-        await browser.close();
+		await browser.close();
 
-        return productInfo;
-    } catch (error) {
-        console.log("Error : " + error);
+		return productInfo;
+	} catch (error) {
+		console.log("Error : " + error);
 		return {
 			'name': '',
-            'url': url,
-            'error': error.message,
-            'page' : 'ebay',
-			'message' : MSG_ERROR
+			'url': url,
+			'error': error.message,
+			'page': 'ebay',
+			'message': MSG_ERROR
 		};
-    }
+	}
 }
 
 module.exports = crawlerEbay;
-
-
-

@@ -7,7 +7,8 @@ const crawlerMercari = require('./crawler/mercaries');
 const crawlerPaypay = require('./crawler/paypay');
 const crawlerAmazon = require('./crawler/amazonjp');
 const crawlerEbay = require('./crawler/ebay');
-const getIpProxy = require('./proxy/index');
+const { getIpProxy, getUserAgents } = require('./proxy/index');
+const cst = require('./constants.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,11 +17,11 @@ dotenv.config();
 app.use(express.json());
 app.use(cors())
 
-const MSG_ERROR = '商品情報が取得出来ませんでした。仕入先URLを再度確認してください。';
 
-async function run() {
+async function test() {
 	// let proxyIP = getIpProxy();
-	let proxyIP = '140.227.59.167:3180';
+	
+	let proxyIP = '160.16.62.47:3128';
 	const browser = await puppeteer.launch({
 		headless: false,
 		args: [ 
@@ -29,23 +30,25 @@ async function run() {
 			'--ignore-certificate-errors-spki-list '
 		]
 	});
-	console.log('IP Proxy ' + proxyIP)
-	
+	let uerAgent = getUserAgents();
+	console.log('uerAgent ' + uerAgent)
 	const context = await browser.createIncognitoBrowserContext();
 	const page = await context.newPage();
+	// await page.setUserAgent(uerAgent);
 	const pageUrl = 'https://www.ipaddress.my/';
 
 	await page.goto(pageUrl, {
 		waitUntil: "networkidle2",
 		timeout: 0
 	});
-
 }
+// test();
 
-// run();
 async function main(params, suppliername) {
 	process.setMaxListeners(0);
 	let proxyIP = suppliername == 'paypay' ? '' : getIpProxy();
+	// let proxyIP = '160.16.62.47:3128';
+
 	const browser = await puppeteer.launch({
 		ignoreHTTPSErrors: false,
 		headless: false,
@@ -59,31 +62,33 @@ async function main(params, suppliername) {
 			"--disable-site-isolation-trials",
 			"--disable-features=site-per-process",
 			`--proxy-server=${ proxyIP }`
+			// "--proxy-server=140.83.37.54:80"
 		],
 		browserContext: "default",
 	});
 	console.log('IP Proxy ' + proxyIP)
 	const page = await browser.newPage();
-	// await page.setUserAgent('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36');
+	await page.setUserAgent(getUserAgents());
 	let product = [];
 	let url = params.supplierval || '';
-
+	let start_cron = params.start_cron || '';
+	
 	switch (suppliername) {
 		case 'amazon':
 			console.log("========== Start crawler page amazon! ==========");
-			product = await crawlerAmazon(url, browser, page);
+			product = await crawlerAmazon(url, browser, page, start_cron);
 			break;
 		case 'paypay':
 			console.log("========== Start crawler page paypay! ==========");
-			product = await crawlerPaypay(url, browser, page);
+			product = await crawlerPaypay(url, browser, page, start_cron);
 			break;
 		case 'mercari':
 			console.log("========== Start crawler page mercari! ==========");
-			product = await crawlerMercari(url, browser, page);
+			product = await crawlerMercari(url, browser, page, start_cron);
 			break;
 		default:
 			console.log("========== Start crawler page ebay! ==========");
-			product = await crawlerEbay(url, browser, page);
+			product = await crawlerEbay(url, browser, page, start_cron);
 			break;
 	}
 
@@ -91,24 +96,17 @@ async function main(params, suppliername) {
 }
 
 app.get('/', async (req, res) => {
-	console.log(req.socket.remoteAddress);
 	await res.send("Test server is running success!")
 })
 
 app.get('/search', async (req, res) => {
 
 	let search = req.query;
-	let response = [];
-	let listPages = {
-		paypay : 'paypayfleamarket.yahoo.co.jp',
-		mercari : 'jp.mercari.com',
-		amazon : 'amazon.co.jp',
-		ebay : 'ebay.com'
-	}
-	
 	let url = search.supplierval || '';
 	let checkUrl = false;
 	let suppliername = 'ebay';
+	let listPages = cst.LIST_PAGE_CRAWLER
+	let response = [];
 	
 	try {
 
@@ -120,19 +118,18 @@ app.get('/search', async (req, res) => {
 		}
 
 		if (!checkUrl) {
-			throw new Error('Url invalid ' + url);
+			throw new Error('Url is not valid ' + url);
 		}
 	
 		response = await main(search, suppliername);
 
 	} catch (error) {
 		console.dir('Error: ' + error);
-
 		return await res.json({
 			status: false,
 			data: {},
 			error: error.message,
-			message: MSG_ERROR
+			message: cst.MSG_ERROR
 		});
 	}
 
