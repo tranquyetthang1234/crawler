@@ -34,20 +34,22 @@ async function crawlerAmazon(url, browser, page, start_cron) {
         }
 
         let checkStock = '';
-        checkStock = await page.evaluate((cst) => {
+        checkStock = await page.evaluate((a, b) => {
             let tagStock = document.querySelector('#availability')
             let availability = tagStock != null ? tagStock.innerText : null;
+          
             let unavailable = 'Currently unavailable';
             let textOutStock = 'out of stock';
-            let unavailable_jp = cst.UNAVAILABLE;
-            let outOfStock_jP = cst.OUT_OF_STOCK;
+            let unavailable_jp = a;
+            let outOfStock_jP = b;
+          
             if (availability && (availability.includes(unavailable) || availability.includes(textOutStock)
                 || availability.includes(unavailable_jp)|| availability.includes(outOfStock_jP) )) {
                 return true;
             }
 
             return false;
-        }, [cst])
+        }, [cst.UNAVAILABLE, cst.OUT_OF_STOCK])
 
         let prices = [];
         let images = [];
