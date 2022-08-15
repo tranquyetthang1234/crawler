@@ -46,12 +46,10 @@ async function test() {
 
 async function main(params, suppliername) {
 	process.setMaxListeners(0);
-	let proxyIP = suppliername == 'paypay' ? '' : getIpProxy();
-	// let proxyIP = '160.16.62.47:3128';
-
+	let proxyIP = suppliername == 'mercari' ? getIpProxy() : '';
 	const browser = await puppeteer.launch({
 		ignoreHTTPSErrors: false,
-		headless: false,
+		headless: true,
 		args: [
 			"--disable-gpu",
 			"--disable-dev-shm-usage",
@@ -62,13 +60,12 @@ async function main(params, suppliername) {
 			"--disable-site-isolation-trials",
 			"--disable-features=site-per-process",
 			`--proxy-server=${ proxyIP }`
-			// "--proxy-server=140.83.37.54:80"
 		],
 		browserContext: "default",
 	});
 	console.log('IP Proxy ' + proxyIP)
 	const page = await browser.newPage();
-	await page.setUserAgent(getUserAgents());
+	// await page.setUserAgent(getUserAgents());
 	let product = [];
 	let url = params.supplierval || '';
 	let start_cron = params.start_cron || '';

@@ -27,7 +27,7 @@ async function crawlerPaypay(url, browser, page, start_cron) {
 		}, priceXPath);
 
 
-		let checkStock = ''
+		let checkStock = false;
 		checkStock = await page.$$eval('div img', images => images.some(image =>  {
 			let sticker = image.getAttribute('alt');
 			return sticker == 'sold';

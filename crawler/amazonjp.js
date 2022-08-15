@@ -23,6 +23,9 @@ async function crawlerAmazon(url, browser, page, start_cron) {
 
         let name = await page.evaluate(() => {
             let tagname = document.querySelector('#productTitle');
+            if (tagname == null) {
+                tagname = document.querySelector('#btAsinTitle');
+            }
             return tagname ? tagname.innerText : null;
         })
 
@@ -34,9 +37,12 @@ async function crawlerAmazon(url, browser, page, start_cron) {
         checkStock = await page.evaluate(() => {
             let tagStock = document.querySelector('#availability')
             let availability = tagStock != null ? tagStock.innerText : null;
-            let text = 'Currently unavailable';
+            let unavailable = 'Currently unavailable';
             let textOutStock = 'out of stock';
-            if (availability && (availability.includes(text) || availability.includes(textOutStock))) {
+            let unavailable_jp = cst.UNAVAILABLE;
+            let outOfStock_jP = cst.OUT_OF_STOCK;
+            if (availability && (availability.includes(unavailable) || availability.includes(textOutStock)
+                || availability.includes(unavailable_jp)|| availability.includes(outOfStock_jP) )) {
                 return true;
             }
 
@@ -109,8 +115,8 @@ async function getInfoProduct(page) {
             {
                 'element': '#twisterContainer ul.a-unordered-list.a-button-list.a-horizontal.swatchesSquare li.swatchSelect',
                 'title': '.twisterTextDiv',
-                'price': '.twisterSlotDiv',
-                'price_sub': 'a'
+                'price': '.twisterSlotDiv .twisterSwatchPrice',
+                'price_sub': '.twisterSlotDiv'
             },
             {
                 'element': '#twisterContainer ul.a-unordered-list.a-button-list.a-horizontal.swatchesSquare.imageSwatches li.swatchSelect',
