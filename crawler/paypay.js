@@ -12,7 +12,7 @@ async function crawlerPaypay(url, browser, page, start_cron) {
 			timeout: 0
 		})
 
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(1000);
 		await page.setDefaultNavigationTimeout(100000);
 		await page.$x('/html/body');
 
@@ -49,7 +49,7 @@ async function crawlerPaypay(url, browser, page, start_cron) {
 			name: name,
 			price: price.replace(/[^\d]/g, ""),
 			images: uniqueImages,
-			is_stock: checkStock,
+			is_stock: !checkStock,
 			url: url,
 			page: 'paypay'
 		}

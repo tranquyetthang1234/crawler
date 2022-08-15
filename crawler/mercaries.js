@@ -11,7 +11,7 @@ async function crawlerMercari(url, browser, page, start_cron) {
 			waitUntil: "networkidle0",
 			timeout: 0
 		})
-		await page.waitForTimeout(500);
+		await page.waitForTimeout(1000);
 		await page.setDefaultNavigationTimeout(100000);
 
 		await page.$x('/html/body');
@@ -45,7 +45,7 @@ async function crawlerMercari(url, browser, page, start_cron) {
 			'name': name.length && name.length > 0 ? name[0] : '',
 			'price': price.length && price.length > 0 ? price[0] : '',
 			'images': listImages.filter(el => el != null),
-			'is_stock': checkStock,
+			'is_stock': !checkStock,
 			'page': 'mercari',
 			'url': url
 		}

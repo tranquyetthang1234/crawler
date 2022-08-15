@@ -13,7 +13,7 @@ async function crawlerAmazon(url, browser, page, start_cron) {
             waitUntil: "networkidle2",
             timeout: 0
         })
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(1000);
         await page.setDefaultNavigationTimeout(100000);
 
         await page.waitForSelector('body');
@@ -63,7 +63,7 @@ async function crawlerAmazon(url, browser, page, start_cron) {
             'name': name,
             'price': [prices],
             'images': images,
-            'is_stock': checkStock,
+            'is_stock': !checkStock,
             'page': 'amazon',
             'url': url
         }
