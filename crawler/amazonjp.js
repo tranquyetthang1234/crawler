@@ -49,7 +49,7 @@ async function crawlerAmazon(url, browser, page, start_cron) {
             }
 
             return false;
-        }, [cst.UNAVAILABLE, cst.OUT_OF_STOCK])
+        }, cst.UNAVAILABLE, cst.OUT_OF_STOCK)
 
         let prices = [];
         let images = [];
