@@ -34,7 +34,7 @@ async function crawlerAmazon(url, browser, page, start_cron) {
         }
 
         let checkStock = '';
-        checkStock = await page.evaluate(() => {
+        checkStock = await page.evaluate((cst) => {
             let tagStock = document.querySelector('#availability')
             let availability = tagStock != null ? tagStock.innerText : null;
             let unavailable = 'Currently unavailable';
@@ -47,7 +47,7 @@ async function crawlerAmazon(url, browser, page, start_cron) {
             }
 
             return false;
-        })
+        }, [cst])
 
         let prices = [];
         let images = [];
