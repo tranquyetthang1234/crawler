@@ -1,6 +1,6 @@
 import app from "./src/app.js";
 
-const PORT = process.env.APP_PORT || 3000
+const PORT = 8000
 
 console.log(PORT);
 const server = app.listen(PORT, () => {
