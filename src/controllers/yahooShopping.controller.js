@@ -40,7 +40,7 @@ async function GetProductDetail(req, res) {
     
     let { browser, page } = await configPuppeteer(url);
     
-    // try {
+    try {
         // const response = await axios({
         //     url: url,
         //     responseType: 'arraybuffer',
@@ -88,7 +88,7 @@ async function GetProductDetail(req, res) {
             listImage.push($(this).attr('src'));
         });
 
-        let itemId = $('.mdRankingBadge').next('script[type="text/javascript"]').html();
+        let itemId = $('body').html();
         const regex = /ysrid\s+:\s+'([^']+)'/;
         const match = regex.exec(itemId);
 
@@ -298,7 +298,6 @@ async function GetProductDetail(req, res) {
             shipping,
             listRelatedVariation,
             elapsed_time,
-            body: $.length
         }
         
         new SEND({
@@ -306,7 +305,7 @@ async function GetProductDetail(req, res) {
             message: "get success!",
             data: productInfo,
         }).send(res);
-    // } catch (error) {
+    } catch (error) {
         const data = { isStock: false };
         await browser.close();
 
@@ -319,9 +318,9 @@ async function GetProductDetail(req, res) {
         } else {
             throw new errorResponse.ErrorResponse(error, 500);
         }
-    // } finally {
-    //     await browser.close();
-    // }
+    } finally {
+        await browser.close();
+    }
 
 }
 

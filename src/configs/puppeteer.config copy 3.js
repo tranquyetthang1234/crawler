@@ -43,16 +43,16 @@ async function configPuppeteer(url) {
             waitUntil: "networkidle2",
             timeout: 40000
         })
-        
+
         await page.waitForTimeout(1000);
         await page.waitForSelector('body');
         await page.$x('/html/body');
 
         return { browser, page };
     } catch (error) {
-        console.log(error)
         // await browser.close();
-        throw new errorResponse.ErrorResponse(error, 500);
+        //throw new errorResponse.ErrorResponse(error, 500);
+        console.log(error)
     }
 }
 
